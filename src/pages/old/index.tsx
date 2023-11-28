@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, ChangeEvent, useEffect } from "react";
 
 // ツイートの型定義
 type Tweet = {
@@ -45,7 +45,7 @@ const TwitterArchiveViewer = () => {
     try {
       const data = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result as string);
+        reader.onload = (e) => resolve(e.target?.result as string);
         reader.onerror = (e) => reject(reader.error);
         reader.readAsText(file);
       });
@@ -73,9 +73,13 @@ const TwitterArchiveViewer = () => {
       combinedTweets = combinedTweets.concat(userTweets);
     }
 
-    combinedTweets.sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-    );
+    combinedTweets.sort((a, b) => {
+      // Add your sorting logic here
+      // For example, sorting by created_at in descending order
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
     setAllTweets(combinedTweets);
     setTweets(combinedTweets);
   };
