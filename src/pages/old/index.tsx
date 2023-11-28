@@ -1,16 +1,19 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React, { useState, ChangeEvent } from "react";
 
+// ツイートの型定義
 type Tweet = {
   created_at: string;
   full_text: string;
   userName: string;
 };
 
+// ユーザー入力の型定義
 type UserInput = {
-  fileData: string; // Base64エンコードされたファイルデータ
+  file: File | null;
   userName: string;
 };
 
+// 日時を日本式にフォーマットする関数
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const formatter = new Intl.DateTimeFormat("ja-JP", {
@@ -23,35 +26,32 @@ const formatDate = (dateString: string): string => {
   return formatter.format(date);
 };
 
+// コンポーネント
 const TwitterArchiveViewer = () => {
   const [allTweets, setAllTweets] = useState<Tweet[]>([]);
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [userInputs, setUserInputs] = useState<UserInput[]>([
-    { fileData: "", userName: "" },
-  ]);
+    { file: null, userName: "" },
+  ]); // ユーザー入力フィールドのステート
 
-  useEffect(() => {
-    const savedData = localStorage.getItem("userInputs");
-    if (savedData) {
-      setUserInputs(JSON.parse(savedData));
-    }
-  }, []);
-
-  const saveToLocalStorage = () => {
-    localStorage.setItem("userInputs", JSON.stringify(userInputs));
-    window.alert("保存しました");
-  };
-
+  // ファイルからツイートを読み込む関数
   const loadTweets = async (
-    fileData: string,
+    file: File | null,
     userName: string
   ): Promise<Tweet[]> => {
-    if (!fileData) return [];
+    if (!file) return [];
 
     try {
+      const data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result as string);
+        reader.onerror = (e) => reject(reader.error);
+        reader.readAsText(file);
+      });
+
       const window = { YTD: { tweets: { part0: [] } } }; // ダミーオブジェクト
-      eval(fileData); // ファイルから読み込んだスクリプトを実行
+      eval(data); // ファイルから読み込んだスクリプトを実行
       const loadedTweets = window.YTD.tweets.part0 as any[];
 
       return loadedTweets.map((tweetData) => ({
@@ -60,15 +60,16 @@ const TwitterArchiveViewer = () => {
         userName,
       }));
     } catch (error) {
-      console.error("Error processing file data:", error);
+      console.error("Error reading file:", error);
       return [];
     }
   };
 
+  // ツイートを表示する関数
   const displayTweets = async () => {
     let combinedTweets: Tweet[] = [];
     for (const input of userInputs) {
-      const userTweets = await loadTweets(input.fileData, input.userName);
+      const userTweets = await loadTweets(input.file, input.userName);
       combinedTweets = combinedTweets.concat(userTweets);
     }
 
@@ -79,37 +80,26 @@ const TwitterArchiveViewer = () => {
     setTweets(combinedTweets);
   };
 
+  // ユーザー入力フィールドを追加する関数
   const addUserInput = () => {
     setUserInputs((prevInputs) => [
       ...prevInputs,
-      { fileData: "", userName: "" },
+      { file: null, userName: "" },
     ]);
   };
 
-  const handleUserInputChange = async (
+  // ユーザー情報の変更ハンドラー
+  const handleUserInputChange = (
     index: number,
     file: File | null,
     userName: string
   ) => {
-    let fileData = "";
-    if (file) {
-      fileData = await fileToBase64(file);
-    }
-
     const newUserInputs = [...userInputs];
-    newUserInputs[index] = { fileData, userName };
+    newUserInputs[index] = { file, userName };
     setUserInputs(newUserInputs);
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file);
-    });
-  };
-
+  // 検索バーのイベントハンドラー
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -132,48 +122,40 @@ const TwitterArchiveViewer = () => {
 
   return (
     <div className="container mx-auto p-4">
+      {/* ユーザー入力フィールド */}
       {userInputs.map((input, index) => (
-        <div key={index} className="mb-4 flex items-center">
-          <div className="flex-grow">
-            <input
-              type="file"
-              accept=".js"
-              className="border p-2 rounded"
-              onChange={(e) =>
-                handleUserInputChange(
-                  index,
-                  e.target.files ? e.target.files[0] : null,
-                  input.userName
-                )
-              }
-            />
-            <input
-              type="text"
-              placeholder={`User ${index + 1}'s Name`}
-              className="border p-2 rounded ml-2"
-              value={input.userName}
-              onChange={(e) =>
-                handleUserInputChange(index, null, e.target.value)
-              }
-            />
-            <button
-              onClick={() => removeUserInput(index)}
-              className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            >
-              -
-            </button>
-            {/* {userInputs.length > 1 && (
-              <button
-                onClick={() => removeUserInput(index)}
-                className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-              >
-                -
-              </button>
-            )} */}
-          </div>
+        <div key={index} className="mb-4">
+          <input
+            type="file"
+            accept=".js"
+            className="border p-2 rounded"
+            onChange={(e) =>
+              handleUserInputChange(
+                index,
+                e.target.files ? e.target.files[0] : null,
+                input.userName
+              )
+            }
+          />
+          <input
+            type="text"
+            placeholder={`User ${index + 1}'s Name`}
+            className="border p-2 rounded ml-2"
+            value={input.userName}
+            onChange={(e) =>
+              handleUserInputChange(index, input.file, e.target.value)
+            }
+          />
+          <button
+            onClick={() => removeUserInput(index)}
+            className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          >
+            -
+          </button>
         </div>
       ))}
 
+      {/* ユーザー入力フィールド追加ボタン */}
       <button
         onClick={addUserInput}
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
@@ -181,23 +163,18 @@ const TwitterArchiveViewer = () => {
         +
       </button>
 
-      <button
-        onClick={saveToLocalStorage}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 mx-6 px-4 rounded mb-4"
-      >
-        保存
-      </button>
-
+      {/* 検索バー */}
       <div className="mb-4">
         <input
           type="text"
           placeholder="ツイート検索..."
-          className="border p-2 rounded"
+          className="border p-2 rounded w-full"
           value={searchQuery}
           onChange={handleSearchChange}
         />
       </div>
 
+      {/* ツイートを表示するボタン */}
       <button
         onClick={displayTweets}
         className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
@@ -205,6 +182,7 @@ const TwitterArchiveViewer = () => {
         表示
       </button>
 
+      {/* ツイートの表示 */}
       <div id="timeline">
         {tweets.map((tweet, index) => (
           <div key={index} className="tweet p-4 border-b">
