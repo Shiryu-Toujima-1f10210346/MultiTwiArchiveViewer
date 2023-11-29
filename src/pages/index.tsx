@@ -26,23 +26,78 @@ const formatDate = (dateString: string): string => {
   return formatter.format(date);
 };
 
+const openDB = (dbName: string, version: number, upgradeCallback: (db: IDBDatabase) => void): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, version);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = () => upgradeCallback(request.result);
+  });
+};
+
+const getFromDB = (db: IDBDatabase, storeName: string, key: string): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName);
+    const store = transaction.objectStore(storeName);
+    const request = store.get(key);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+};
+
+const saveToDB = (db: IDBDatabase, storeName: string, key: string, value: any): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.put(value, key);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+};
+
 // コンポーネント
 const TwitterArchiveViewer = () => {
   const [allTweets, setAllTweets] = useState<Tweet[]>([]);
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [userInputs, setUserInputs] = useState<UserInput[]>([
+    
     { file: null, userName: "" },
   ]); // ユーザー入力フィールドのステート
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
   useEffect(() => {
-    const tweets = localStorage.getItem("tweets");
-    if (tweets) {
-      setAllTweets(JSON.parse(tweets));
-      setTweets(JSON.parse(tweets));
-    }
+    const dbName = 'twitterArchiveViewer';
+    const storeName = 'tweets';
+    openDB(dbName, 1, (db) => {
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName);
+      }
+    }).then((db) => {
+      getFromDB(db, storeName, 'tweets').then((tweets) => {
+        if (tweets) {
+          setAllTweets(tweets);
+          setTweets(tweets);
+        }
+      });
+    });
   }, []);
+// 期間に基づいてツイートをフィルタリングする関数
+const filterTweetsByDateRange = () => {
+  const filtered = allTweets.filter(tweet => {
+    const tweetDate = new Date(tweet.created_at);
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+    return tweetDate >= startDate && tweetDate <= endDate;
+  });
+  setTweets(filtered);
+};
 
+// フィルターをリセットする関数
+const resetFilter = () => {
+  setTweets(allTweets);
+  setDateRange({ start: '', end: '' });
+};
   // ファイルからツイートを読み込む関数
   const loadTweets = async (
     file: File | null,
@@ -88,9 +143,18 @@ const TwitterArchiveViewer = () => {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     });
-    setAllTweets(combinedTweets);
-    setTweets(combinedTweets);
-    localStorage.setItem("tweets", JSON.stringify(combinedTweets));
+    const dbName = 'twitterArchiveViewer';
+  const storeName = 'tweets';
+  openDB(dbName, 1, (db) => {
+    if (!db.objectStoreNames.contains(storeName)) {
+      db.createObjectStore(storeName);
+    }
+  }).then((db) => {
+    saveToDB(db, storeName, 'tweets', combinedTweets);
+  });
+
+  setAllTweets(combinedTweets);
+  setTweets(combinedTweets);
   };
 
   // ユーザー入力フィールドを追加する関数
@@ -194,7 +258,33 @@ const TwitterArchiveViewer = () => {
       >
         表示
       </button>
-
+ {/* 期間選択フィールド */}
+ <div className="mb-4">
+        <input
+          type="date"
+          className="border p-2 rounded mr-2"
+          value={dateRange.start}
+          onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+        />
+        <input
+          type="date"
+          className="border p-2 rounded mr-2"
+          value={dateRange.end}
+          onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+        />
+        <button
+          onClick={filterTweetsByDateRange}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          期間を設定
+        </button>
+        <button
+          onClick={resetFilter}
+          className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+        >
+          リセット
+        </button>
+      </div>
       {/* ツイートの表示 */}
       <div id="timeline">
         {tweets.map((tweet, index) => (

@@ -35,6 +35,14 @@ const TwitterArchiveViewer = () => {
     { file: null, userName: "" },
   ]); // ユーザー入力フィールドのステート
 
+  useEffect(() => {
+    const tweets = localStorage.getItem("tweets");
+    if (tweets) {
+      setAllTweets(JSON.parse(tweets));
+      setTweets(JSON.parse(tweets));
+    }
+  }, []);
+
   // ファイルからツイートを読み込む関数
   const loadTweets = async (
     file: File | null,
@@ -82,6 +90,7 @@ const TwitterArchiveViewer = () => {
     });
     setAllTweets(combinedTweets);
     setTweets(combinedTweets);
+    localStorage.setItem("tweets", JSON.stringify(combinedTweets));
   };
 
   // ユーザー入力フィールドを追加する関数
