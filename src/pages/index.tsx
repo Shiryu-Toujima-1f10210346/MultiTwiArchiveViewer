@@ -171,7 +171,7 @@ const TwitterArchiveViewer = () => {
           <input
             type="file"
             accept=".js"
-            className="border p-2 rounded"
+            className="border p-2 rounded w-full md:w-auto"
             onChange={(e) =>
               handleUserInputChange(
                 index,
@@ -183,7 +183,7 @@ const TwitterArchiveViewer = () => {
           <input
             type="text"
             placeholder={`User ${index + 1}'s Name`}
-            className="border p-2 rounded ml-2"
+            className="border p-2 rounded w-full md:w-auto md:ml-2 mt-2 md:mt-0"
             value={input.userName}
             onChange={(e) =>
               handleUserInputChange(index, input.file, e.target.value)
@@ -191,7 +191,7 @@ const TwitterArchiveViewer = () => {
           />
           <button
             onClick={() => removeUserInput(index)}
-            className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            className="w-full md:w-auto bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-2 md:mt-0 md:ml-2"
           >
             -
           </button>
@@ -201,7 +201,7 @@ const TwitterArchiveViewer = () => {
       {/* ユーザー入力フィールド追加ボタン */}
       <button
         onClick={addUserInput}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+        className="w-full md:w-auto bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
       >
         +
       </button>
@@ -218,23 +218,24 @@ const TwitterArchiveViewer = () => {
       </div>
 
       {/* ツイートを表示するボタン */}
-      <button
-        onClick={displayTweets}
-        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
-      >
-        表示
-      </button>
+      <div className="flex flex-col md:flex-row justify-start gap-4 md:gap-64">
+        <button
+          onClick={displayTweets}
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
+        >
+          表示
+        </button>
 
-      <button
-        onClick={() => {
-          clearDB();
-          clearTweets();
-        }}
-        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 ml-10"
-      >
-        初期化
-      </button>
-
+        <button
+          onClick={() => {
+            clearDB();
+            clearTweets();
+          }}
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
+        >
+          初期化
+        </button>
+      </div>
       {/* ツイートの表示 */}
       <div id="timeline">
         {tweets.map((tweet, index) => (
