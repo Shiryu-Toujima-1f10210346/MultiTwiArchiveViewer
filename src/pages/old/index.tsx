@@ -234,12 +234,45 @@ const TwitterArchiveViewer = () => {
       </div>
 
       {/* ツイートを表示するボタン */}
-      <div className="flex flex-col md:flex-row justify-start gap-4 md:gap-64">
+      <div className="flex flex-col md:flex-row gap-2 mb-6">
         <button
           onClick={displayTweets}
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
         >
           表示
+        </button>
+        {/* ツイート時間を降順にする */}
+        <button
+          onClick={() => {
+            const sortedTweets = [...tweets];
+            sortedTweets.sort((a, b) => {
+              return (
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+              );
+            });
+            setTweets(sortedTweets);
+          }}
+          className=" font-bold py-2 px-4 rounded mt-4 mb-4 hover:underline hover:underline-thickness: 2 hover:underline-offset-8"
+        >
+          新しい順
+        </button>
+
+        {/* ツイート時間を昇順にする */}
+        <button
+          onClick={() => {
+            const sortedTweets = [...tweets];
+            sortedTweets.sort((a, b) => {
+              return (
+                new Date(a.created_at).getTime() -
+                new Date(b.created_at).getTime()
+              );
+            });
+            setTweets(sortedTweets);
+          }}
+          className="font-bold py-2 px-4 rounded mt-4 mb-4 hover:underline hover:underline-thickness: 2 hover:underline-offset-8"
+        >
+          古い順
         </button>
 
         <button
