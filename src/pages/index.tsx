@@ -41,6 +41,7 @@ const TwitterArchiveViewer = () => {
   const [userInputs, setUserInputs] = useState<UserInput[]>([
     { file: null, userName: "" },
   ]); // ユーザー入力フィールドのステート
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
   useEffect(() => {
     const dbName = "twitterArchiveViewer";
@@ -58,7 +59,22 @@ const TwitterArchiveViewer = () => {
       });
     });
   }, []);
+  // 期間に基づいてツイートをフィルタリングする関数
+  const filterTweetsByDateRange = () => {
+    const filtered = allTweets.filter((tweet) => {
+      const tweetDate = new Date(tweet.created_at);
+      const startDate = new Date(dateRange.start);
+      const endDate = new Date(dateRange.end);
+      return tweetDate >= startDate && tweetDate <= endDate;
+    });
+    setTweets(filtered);
+  };
 
+  // フィルターをリセットする関数
+  const resetFilter = () => {
+    setTweets(allTweets);
+    setDateRange({ start: "", end: "" });
+  };
   // ファイルからツイートを読み込む関数
   const loadTweets = async (
     file: File | null,
@@ -171,7 +187,7 @@ const TwitterArchiveViewer = () => {
           <input
             type="file"
             accept=".js"
-            className="border p-2 rounded w-full md:w-auto"
+            className="border p-2 rounded"
             onChange={(e) =>
               handleUserInputChange(
                 index,
@@ -183,7 +199,7 @@ const TwitterArchiveViewer = () => {
           <input
             type="text"
             placeholder={`User ${index + 1}'s Name`}
-            className="border p-2 rounded w-full md:w-auto md:ml-2 mt-2 md:mt-0"
+            className="border p-2 rounded ml-2"
             value={input.userName}
             onChange={(e) =>
               handleUserInputChange(index, input.file, e.target.value)
@@ -191,7 +207,7 @@ const TwitterArchiveViewer = () => {
           />
           <button
             onClick={() => removeUserInput(index)}
-            className="w-full md:w-auto bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-2 md:mt-0 md:ml-2"
+            className="ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
           >
             -
           </button>
@@ -234,6 +250,35 @@ const TwitterArchiveViewer = () => {
           className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
         >
           初期化
+        </button>
+      </div>
+      {/* 期間選択フィールド */}
+      <div className="mb-4">
+        <input
+          type="date"
+          className="border p-2 rounded mr-2"
+          value={dateRange.start}
+          onChange={(e) =>
+            setDateRange({ ...dateRange, start: e.target.value })
+          }
+        />
+        <input
+          type="date"
+          className="border p-2 rounded mr-2"
+          value={dateRange.end}
+          onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+        />
+        <button
+          onClick={filterTweetsByDateRange}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          期間を設定
+        </button>
+        <button
+          onClick={resetFilter}
+          className="ml-2 bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+        >
+          リセット
         </button>
       </div>
       {/* ツイートの表示 */}

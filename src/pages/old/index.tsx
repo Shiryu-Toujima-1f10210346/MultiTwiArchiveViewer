@@ -1,4 +1,11 @@
 import React, { useState, ChangeEvent, useEffect } from "react";
+import {
+  openDB,
+  saveToDB,
+  getFromDB,
+  saveImageToDB,
+  clearDB,
+} from "../../utils/dbOperations";
 
 // ツイートの型定義
 type Tweet = {
@@ -26,55 +33,25 @@ const formatDate = (dateString: string): string => {
   return formatter.format(date);
 };
 
-const openDB = (dbName: string, version: number, upgradeCallback: (db: IDBDatabase) => void): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, version);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = () => upgradeCallback(request.result);
-  });
-};
-
-const getFromDB = (db: IDBDatabase, storeName: string, key: string): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName);
-    const store = transaction.objectStore(storeName);
-    const request = store.get(key);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
-};
-
-const saveToDB = (db: IDBDatabase, storeName: string, key: string, value: any): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, 'readwrite');
-    const store = transaction.objectStore(storeName);
-    const request = store.put(value, key);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
-};
-
 // コンポーネント
 const TwitterArchiveViewer = () => {
   const [allTweets, setAllTweets] = useState<Tweet[]>([]);
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [userInputs, setUserInputs] = useState<UserInput[]>([
-    
     { file: null, userName: "" },
   ]); // ユーザー入力フィールドのステート
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
   useEffect(() => {
-    const dbName = 'twitterArchiveViewer';
-    const storeName = 'tweets';
+    const dbName = "twitterArchiveViewer";
+    const storeName = "tweets";
     openDB(dbName, 1, (db) => {
       if (!db.objectStoreNames.contains(storeName)) {
         db.createObjectStore(storeName);
       }
     }).then((db) => {
-      getFromDB(db, storeName, 'tweets').then((tweets) => {
+      getFromDB(db, storeName, "tweets").then((tweets) => {
         if (tweets) {
           setAllTweets(tweets);
           setTweets(tweets);
@@ -82,22 +59,22 @@ const TwitterArchiveViewer = () => {
       });
     });
   }, []);
-// 期間に基づいてツイートをフィルタリングする関数
-const filterTweetsByDateRange = () => {
-  const filtered = allTweets.filter(tweet => {
-    const tweetDate = new Date(tweet.created_at);
-    const startDate = new Date(dateRange.start);
-    const endDate = new Date(dateRange.end);
-    return tweetDate >= startDate && tweetDate <= endDate;
-  });
-  setTweets(filtered);
-};
+  // 期間に基づいてツイートをフィルタリングする関数
+  const filterTweetsByDateRange = () => {
+    const filtered = allTweets.filter((tweet) => {
+      const tweetDate = new Date(tweet.created_at);
+      const startDate = new Date(dateRange.start);
+      const endDate = new Date(dateRange.end);
+      return tweetDate >= startDate && tweetDate <= endDate;
+    });
+    setTweets(filtered);
+  };
 
-// フィルターをリセットする関数
-const resetFilter = () => {
-  setTweets(allTweets);
-  setDateRange({ start: '', end: '' });
-};
+  // フィルターをリセットする関数
+  const resetFilter = () => {
+    setTweets(allTweets);
+    setDateRange({ start: "", end: "" });
+  };
   // ファイルからツイートを読み込む関数
   const loadTweets = async (
     file: File | null,
@@ -128,6 +105,11 @@ const resetFilter = () => {
     }
   };
 
+  const clearTweets = () => {
+    setAllTweets([]);
+    setTweets([]);
+  };
+
   // ツイートを表示する関数
   const displayTweets = async () => {
     let combinedTweets: Tweet[] = [];
@@ -143,18 +125,18 @@ const resetFilter = () => {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     });
-    const dbName = 'twitterArchiveViewer';
-  const storeName = 'tweets';
-  openDB(dbName, 1, (db) => {
-    if (!db.objectStoreNames.contains(storeName)) {
-      db.createObjectStore(storeName);
-    }
-  }).then((db) => {
-    saveToDB(db, storeName, 'tweets', combinedTweets);
-  });
+    const dbName = "twitterArchiveViewer";
+    const storeName = "tweets";
+    openDB(dbName, 1, (db) => {
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName);
+      }
+    }).then((db) => {
+      saveToDB(db, storeName, "tweets", combinedTweets);
+    });
 
-  setAllTweets(combinedTweets);
-  setTweets(combinedTweets);
+    setAllTweets(combinedTweets);
+    setTweets(combinedTweets);
   };
 
   // ユーザー入力フィールドを追加する関数
@@ -235,7 +217,7 @@ const resetFilter = () => {
       {/* ユーザー入力フィールド追加ボタン */}
       <button
         onClick={addUserInput}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+        className="w-full md:w-auto bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
       >
         +
       </button>
@@ -252,19 +234,33 @@ const resetFilter = () => {
       </div>
 
       {/* ツイートを表示するボタン */}
-      <button
-        onClick={displayTweets}
-        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
-      >
-        表示
-      </button>
- {/* 期間選択フィールド */}
- <div className="mb-4">
+      <div className="flex flex-col md:flex-row justify-start gap-4 md:gap-64">
+        <button
+          onClick={displayTweets}
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
+        >
+          表示
+        </button>
+
+        <button
+          onClick={() => {
+            clearDB();
+            clearTweets();
+          }}
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
+        >
+          初期化
+        </button>
+      </div>
+      {/* 期間選択フィールド */}
+      <div className="mb-4">
         <input
           type="date"
           className="border p-2 rounded mr-2"
           value={dateRange.start}
-          onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+          onChange={(e) =>
+            setDateRange({ ...dateRange, start: e.target.value })
+          }
         />
         <input
           type="date"
