@@ -5,7 +5,7 @@ import {
   getFromDB,
   saveImageToDB,
   clearDB,
-} from "./dbOperations";
+} from "./utils/dbOperations";
 
 // ツイートの型定義
 type Tweet = {
