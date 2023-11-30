@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React, { useState, ChangeEvent, useEffect, useRef } from "react";
 import {
   openDB,
   saveToDB,
@@ -6,9 +6,17 @@ import {
   saveImageToDB,
   clearDB,
 } from "../utils/dbOperations";
+import Image from "next/image";
+import Link from "next/link";
 
 // ツイートの型定義
 type Tweet = {
+  extended_entities: {
+    media: {
+      media_url_https: string;
+      type: string;
+    }[];
+  };
   created_at: string;
   full_text: string;
   userName: string;
@@ -42,6 +50,14 @@ const TwitterArchiveViewer = () => {
     { file: null, userName: "" },
   ]); // ユーザー入力フィールドのステート
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [maxTweetsToShow, setMaxTweetsToShow] = useState(100); // 初期値は300
+  const [displayedTweets, setDisplayedTweets] = useState<Tweet[]>([]);
+  const observer = useRef<IntersectionObserver>();
+  const lastTweetElementRef = useRef(null); // 最後のツイート要素の参照
+
+  useEffect(() => {
+    setDisplayedTweets(tweets.slice(0, maxTweetsToShow));
+  }, [tweets, maxTweetsToShow]);
 
   useEffect(() => {
     const dbName = "twitterArchiveViewer";
@@ -59,6 +75,43 @@ const TwitterArchiveViewer = () => {
       });
     });
   }, []);
+
+  useEffect(() => {
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && displayedTweets.length < tweets.length) {
+        setMaxTweetsToShow((prev) => prev + maxTweetsToShow);
+      }
+    });
+
+    if (lastTweetElementRef.current) {
+      observer.current.observe(lastTweetElementRef.current);
+    }
+
+    return () => {
+      if (observer.current) observer.current.disconnect();
+    };
+  }, [displayedTweets, maxTweetsToShow, tweets.length]);
+
+  // ツイートに含まれる画像を表示する関数
+  const renderMedia = (tweet: Tweet) => {
+    // メディア（画像）が含まれているかをチェック
+    const media = tweet.extended_entities?.media || [];
+    return media.map((mediaItem, index) =>
+      mediaItem.type === "photo" ? (
+        <a href={mediaItem.media_url_https} target="_blank" key={index}>
+          <Image
+            src={mediaItem.media_url_https}
+            alt="ツイート画像"
+            width={100}
+            height={100}
+          />
+        </a>
+      ) : null
+    );
+  };
+
   // 期間に基づいてツイートをフィルタリングする関数
   const filterTweetsByDateRange = () => {
     const filtered = allTweets.filter((tweet) => {
@@ -217,9 +270,9 @@ const TwitterArchiveViewer = () => {
       {/* ユーザー入力フィールド追加ボタン */}
       <button
         onClick={addUserInput}
-        className="w-full md:w-auto bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+        className=" bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
       >
-        +
+        ＋
       </button>
 
       {/* 検索バー */}
@@ -234,7 +287,11 @@ const TwitterArchiveViewer = () => {
       </div>
 
       {/* ツイートを表示するボタン */}
-      <div className="flex flex-col md:flex-row gap-2 mb-6">
+      <div
+        className="flex 
+      justify-start 
+      md:flex-row gap-36"
+      >
         <button
           onClick={displayTweets}
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4 mb-4"
@@ -242,38 +299,6 @@ const TwitterArchiveViewer = () => {
           表示
         </button>
         {/* ツイート時間を降順にする */}
-        <button
-          onClick={() => {
-            const sortedTweets = [...tweets];
-            sortedTweets.sort((a, b) => {
-              return (
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime()
-              );
-            });
-            setTweets(sortedTweets);
-          }}
-          className=" font-bold py-2 px-4 rounded mt-4 mb-4 hover:underline hover:underline-thickness: 2 hover:underline-offset-8"
-        >
-          新しい順
-        </button>
-
-        {/* ツイート時間を昇順にする */}
-        <button
-          onClick={() => {
-            const sortedTweets = [...tweets];
-            sortedTweets.sort((a, b) => {
-              return (
-                new Date(a.created_at).getTime() -
-                new Date(b.created_at).getTime()
-              );
-            });
-            setTweets(sortedTweets);
-          }}
-          className="font-bold py-2 px-4 rounded mt-4 mb-4 hover:underline hover:underline-thickness: 2 hover:underline-offset-8"
-        >
-          古い順
-        </button>
 
         <button
           onClick={() => {
@@ -285,6 +310,7 @@ const TwitterArchiveViewer = () => {
           初期化
         </button>
       </div>
+
       {/* 期間選択フィールド */}
       <div className="mb-4">
         <input
@@ -314,15 +340,58 @@ const TwitterArchiveViewer = () => {
           リセット
         </button>
       </div>
+      <div>
+        <button
+          onClick={() => {
+            const sortedTweets = [...tweets];
+            sortedTweets.sort((a, b) => {
+              return (
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+              );
+            });
+            setTweets(sortedTweets);
+          }}
+          className="hover:bg-gray-200 font-bold py-2 px-4 rounded mt-4 mb-4 underline underline-thickness: 2 underline-offset-8"
+        >
+          新しい順
+        </button>
+
+        {/* ツイート時間を昇順にする */}
+        <button
+          onClick={() => {
+            const sortedTweets = [...tweets];
+            sortedTweets.sort((a, b) => {
+              return (
+                new Date(a.created_at).getTime() -
+                new Date(b.created_at).getTime()
+              );
+            });
+            setTweets(sortedTweets);
+          }}
+          className="hover:bg-gray-200 font-bold py-2 px-4 rounded mt-4 mb-4 underline underline-thickness: 2 underline-offset-8"
+        >
+          古い順
+        </button>
+      </div>
       {/* ツイートの表示 */}
       <div id="timeline">
-        {tweets.map((tweet, index) => (
-          <div key={index} className="tweet p-4 border-b">
+        {displayedTweets.map((tweet, index) => (
+          <div
+            key={index}
+            className="tweet p-4 border-b"
+            ref={
+              index === displayedTweets.length - 1 ? lastTweetElementRef : null
+            }
+          >
             <strong className="font-bold">{tweet.userName}</strong>
             <br />
             <span className="text-sm text-gray-600">{tweet.created_at}</span>
             <br />
-            <p className="mt-2">{tweet.full_text}</p>
+            <div className="mt-2">
+              {tweet.full_text}
+              <div className="media">{renderMedia(tweet)}</div>
+            </div>
           </div>
         ))}
       </div>
