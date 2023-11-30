@@ -1,4 +1,10 @@
-import React, { useState, ChangeEvent, useEffect, useRef } from "react";
+import React, {
+  useState,
+  ChangeEvent,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import {
   openDB,
   saveToDB,
@@ -95,22 +101,25 @@ const TwitterArchiveViewer = () => {
   }, [displayedTweets, maxTweetsToShow, tweets.length]);
 
   // ツイートに含まれる画像を表示する関数
-  const renderMedia = (tweet: Tweet) => {
-    // メディア（画像）が含まれているかをチェック
-    const media = tweet.extended_entities?.media || [];
-    return media.map((mediaItem, index) =>
-      mediaItem.type === "photo" ? (
-        <a href={mediaItem.media_url_https} target="_blank" key={index}>
-          <Image
-            src={mediaItem.media_url_https}
-            alt="ツイート画像"
-            width={100}
-            height={100}
-          />
-        </a>
-      ) : null
-    );
-  };
+  const renderMedia = useMemo(
+    () => (tweet: Tweet) => {
+      // メディア（画像）が含まれているかをチェック
+      const media = tweet.extended_entities?.media || [];
+      return media.map((mediaItem, index) =>
+        mediaItem.type === "photo" ? (
+          <a href={mediaItem.media_url_https} target="_blank" key={index}>
+            <Image
+              src={mediaItem.media_url_https}
+              alt="ツイート画像"
+              width={100}
+              height={100}
+            />
+          </a>
+        ) : null
+      );
+    },
+    []
+  );
 
   // 期間に基づいてツイートをフィルタリングする関数
   const filterTweetsByDateRange = () => {
