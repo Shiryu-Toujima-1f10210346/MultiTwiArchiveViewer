@@ -52,6 +52,7 @@ const TwitterArchiveViewer = () => {
     clearTweets,
     displayTweets,
   } = useTweets();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [maxTweetsToShow, setMaxTweetsToShow] = useState(100);
   const [displayedTweets, setDisplayedTweets] = useState<Tweet[]>([]);
@@ -160,6 +161,17 @@ const TwitterArchiveViewer = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <div className="text-2xl font-bold mb-6">
+        Multi Twitter Archive Viewer
+        <span>
+          <a
+            href="https://twitter.com/shiryu_dev"
+            className="text-xl ml-8 text-blue-500 hover:underline"
+          >
+            作者(Twitter)
+          </a>
+        </span>
+      </div>
       {/* ユーザー入力フィールド */}
       {userInputs.map((input, index) => (
         <div key={index} className="mb-4">
