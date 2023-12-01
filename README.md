@@ -1,3 +1,13 @@
+# X(旧Twittwer)のアーカイブDL機能を用いた､過去ツイートビューワー
+
+## URL:[MultiTwiArchiveViewer](https://multi-twi-viewer.vercel.app/)
+
+## 他のサービスとココが違う！
+
+### 複数人分のアーカイブを読み込んで表示することができます
+
+### 空リプ文化が主な小規模のクローズドコミュニティのTL再現においてとても有用です
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
