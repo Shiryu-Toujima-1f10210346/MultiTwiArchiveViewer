@@ -19,6 +19,8 @@
 
 ツイートのアーカイブデータのダウンロード方法は各自調べて
 
+解答したフォルダ/data/tweets.js
+
 ![usage](https://github.com/Shiryu-Toujima-1f10210346/MultiTwiArchiveViewer/assets/85663022/10fe034e-5278-4e9f-a14b-b9f2b0b84205)
 
 ## 変更ログ
