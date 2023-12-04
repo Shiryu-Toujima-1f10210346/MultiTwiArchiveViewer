@@ -160,8 +160,8 @@ const TwitterArchiveViewer = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="text-2xl font-bold mb-6">
+    <div className="container mx-auto p-4 ">
+      <div className="text-5xl mb-6 font-light">
         Multi Twitter Archive Viewer
         <span>
           <a
@@ -171,6 +171,11 @@ const TwitterArchiveViewer = () => {
             作者(Twitter)
           </a>
         </span>
+      </div>
+      <div className="text-xl font-bold mb-6">
+        <Link href="https://github.com/Shiryu-Toujima-1f10210346/MultiTwiArchiveViewer#twittwer%E3%81%AE%E3%82%A2%E3%83%BC%E3%82%AB%E3%82%A4%E3%83%96dl%E6%A9%9F%E8%83%BD%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E9%81%8E%E5%8E%BB%E3%83%84%E3%82%A4%E3%83%BC%E3%83%88%E3%83%93%E3%83%A5%E3%83%BC%E3%83%AF%E3%83%BC">
+          <p className="text-blue-500 hover:underline">使い方</p>
+        </Link>
       </div>
       {/* ユーザー入力フィールド */}
       {userInputs.map((input, index) => (
@@ -259,15 +264,17 @@ const TwitterArchiveViewer = () => {
             setDateRange({ ...dateRange, start: e.target.value })
           }
         />
+        から
         <input
           type="date"
-          className="border p-2 rounded mr-2"
+          className="border p-2 rounded mr-2 ml-2"
           value={dateRange.end}
           onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
         />
+        まで
         <button
           onClick={filterTweetsByDateRange}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2"
         >
           期間を設定
         </button>

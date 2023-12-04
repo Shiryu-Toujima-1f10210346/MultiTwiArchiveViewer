@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { openDB, saveToDB } from "@/utils/dbOperations";
 
 type Tweet = {
@@ -76,6 +76,11 @@ export const useTweets = () => {
       const tweetDate = new Date(tweet.created_at);
       const startDate = new Date(dateRange.start);
       const endDate = new Date(dateRange.end);
+      //開始日のみ指定されている場合､開始日以降のツイートを表示
+      if (!dateRange.end) return tweetDate >= startDate;
+      //終了日のみ指定されている場合､終了日以前のツイートを表示
+      if (!dateRange.start) return tweetDate <= endDate;
+      //開始日と終了日が指定されている場合､その範囲内のツイートを表示
       return tweetDate >= startDate && tweetDate <= endDate;
     });
     setTweets(filtered);
