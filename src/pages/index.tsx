@@ -53,6 +53,7 @@ const TwitterArchiveViewer = () => {
     resetFilter,
     clearTweets,
     displayTweets,
+    displayTweetsIncludesImages,
   } = useTweets();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,14 +108,17 @@ const TwitterArchiveViewer = () => {
       const media = tweet.extended_entities?.media || [];
       return media.map((mediaItem, index) =>
         mediaItem.type === "photo" ? (
-          <a href={mediaItem.media_url_https} target="_blank" key={index}>
-            <Image
-              src={mediaItem.media_url_https}
-              alt="ツイート画像"
-              width={100}
-              height={100}
-            />
-          </a>
+          <div className="flex" key={index}>
+            <a href={mediaItem.media_url_https} target="_blank">
+              <Image
+                src={mediaItem.media_url_https}
+                alt="ツイート画像"
+                className="contain"
+                width={100}
+                height={100}
+              />
+            </a>
+          </div>
         ) : null
       );
     },
@@ -167,7 +171,7 @@ const TwitterArchiveViewer = () => {
         <title>tweet.js Viewer</title>
         <meta
           name="description"
-          content="Twitterのアーカイブを複数同時に表示することができるサービスです。"
+          content="Twitterのアーカイブを複数同時に表示することができるサービスです。tweet.js対応"
         />
         <meta property="og:title" content="Multi Twitter Archive Viewer" />
         <meta
@@ -344,6 +348,12 @@ const TwitterArchiveViewer = () => {
             className="hover:bg-gray-200 font-bold py-2 px-4 rounded mt-4 mb-4 underline underline-thickness: 2 underline-offset-8"
           >
             古い順
+          </button>
+          <button
+            onClick={displayTweetsIncludesImages}
+            className="hover:bg-gray-200 font-bold py-2 px-4 rounded mt-4 mb-4 underline underline-thickness: 2 underline-offset-8"
+          >
+            メディア
           </button>
         </div>
         {/* ツイートの表示 */}

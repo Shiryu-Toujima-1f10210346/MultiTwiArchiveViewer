@@ -86,6 +86,16 @@ export const useTweets = () => {
     setTweets(filtered);
   };
 
+  // 画像を含むツイートのみを表示する関数
+  const displayTweetsIncludesImages = () => {
+    const filtered = allTweets.filter((tweet) =>
+      tweet.extended_entities?.media.some(
+        (mediaItem) => mediaItem.type === "photo"
+      )
+    );
+    setTweets(filtered);
+  };
+
   // フィルターをリセットする関数
   const resetFilter = () => {
     setTweets(allTweets);
@@ -140,5 +150,6 @@ export const useTweets = () => {
     resetFilter,
     clearTweets,
     displayTweets,
+    displayTweetsIncludesImages,
   };
 };
