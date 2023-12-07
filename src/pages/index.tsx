@@ -178,6 +178,8 @@ const TwitterArchiveViewer = () => {
           name="keywords"
           content="Twitter,アーカイブ,ツイート,Tweet,tweet.js,tweets.js,X,"
         />
+        <meta property="og:type" content="website" />
+
         <meta property="og:site_name" content="Multi Twitter Archive Viewer" />
       </Head>
       <div className="container mx-auto p-4">
