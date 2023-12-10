@@ -5,12 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import {
-  openDB,
-  getFromDB,
-  clearDB,
-  saveDateRangeToDB,
-} from "../utils/dbOperations";
+import { openDB, getFromDB, clearDB } from "../utils/dbOperations";
 import Image from "next/image";
 import Link from "next/link";
 import { useTweets } from "@/hooks/useTweets";
