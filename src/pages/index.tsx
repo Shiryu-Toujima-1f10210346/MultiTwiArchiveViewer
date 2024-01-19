@@ -5,13 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import {
-  openDB,
-  saveToDB,
-  getFromDB,
-  saveImageToDB,
-  clearDB,
-} from "../utils/dbOperations";
+import { openDB, getFromDB, clearDB } from "../utils/dbOperations";
 import Image from "next/image";
 import Link from "next/link";
 import { useTweets } from "@/hooks/useTweets";
@@ -48,11 +42,11 @@ const TwitterArchiveViewer = () => {
     setAllTweets,
     dateRange,
     setDateRange,
-    loadTweets,
     filterTweetsByDateRange,
     resetFilter,
     clearTweets,
     displayTweets,
+    displayTweetsIncludesImages,
   } = useTweets();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,14 +101,17 @@ const TwitterArchiveViewer = () => {
       const media = tweet.extended_entities?.media || [];
       return media.map((mediaItem, index) =>
         mediaItem.type === "photo" ? (
-          <a href={mediaItem.media_url_https} target="_blank" key={index}>
-            <Image
-              src={mediaItem.media_url_https}
-              alt="ツイート画像"
-              width={100}
-              height={100}
-            />
-          </a>
+          <div className="flex" key={index}>
+            <a href={mediaItem.media_url_https} target="_blank">
+              <Image
+                src={mediaItem.media_url_https}
+                alt="ツイート画像"
+                className="contain"
+                width={100}
+                height={100}
+              />
+            </a>
+          </div>
         ) : null
       );
     },
@@ -161,13 +158,17 @@ const TwitterArchiveViewer = () => {
     setUserInputs(newUserInputs);
   };
 
+  const MobileBR = () => {
+    return <br className="block md:hidden" />;
+  };
+
   return (
     <>
       <Head>
         <title>tweet.js Viewer</title>
         <meta
           name="description"
-          content="Twitterのアーカイブを複数同時に表示することができるサービスです。"
+          content="Twitterのアーカイブを複数同時に表示することができるサービスです。tweet.js対応"
         />
         <meta property="og:title" content="Multi Twitter Archive Viewer" />
         <meta
@@ -182,13 +183,13 @@ const TwitterArchiveViewer = () => {
 
         <meta property="og:site_name" content="Multi Twitter Archive Viewer" />
       </Head>
-      <div className="container mx-auto p-4">
-        <div className="text-5xl mb-6 font-light  tracking-widest">
-          M<span className="text-3xl">ulti </span>T
-          <span className="text-3xl">witter </span>A
-          <span className="text-3xl">rchive </span>V
-          <span className="text-3xl">iewer</span>
-          <span className="tracking-normal">
+      <div className="container mx-auto md:mx-96 p-4">
+        <div className="text-3xl md:text-5xl mb-6 font-light  tracking-widest">
+          M<span className="text-2xl md:text-3xl">ulti </span>T
+          <span className="text-2xl md:text-3xl">witter </span>
+          <MobileBR />A<span className="text-2xl md:text-3xl">rchive </span>V
+          <span className="text-2xl md:text-3xl">iewer</span>
+          <span className="md:tracking-normal">
             <a
               href="https://twitter.com/shiryu_dev"
               className="text-xl ml-8 text-blue-500 hover:underline"
@@ -248,7 +249,7 @@ const TwitterArchiveViewer = () => {
           <input
             type="text"
             placeholder="ツイート検索..."
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded "
             value={searchQuery}
             onChange={handleSearchChange}
           />
@@ -292,6 +293,7 @@ const TwitterArchiveViewer = () => {
             }
           />
           から
+          <MobileBR />
           <input
             type="date"
             className="border p-2 rounded mr-2 ml-2"
@@ -301,11 +303,12 @@ const TwitterArchiveViewer = () => {
             }
           />
           まで
+          <MobileBR />
           <button
             onClick={filterTweetsByDateRange}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-2"
           >
-            期間を設定
+            設定
           </button>
           <button
             onClick={resetFilter}
@@ -346,6 +349,12 @@ const TwitterArchiveViewer = () => {
             className="hover:bg-gray-200 font-bold py-2 px-4 rounded mt-4 mb-4 underline underline-thickness: 2 underline-offset-8"
           >
             古い順
+          </button>
+          <button
+            onClick={displayTweetsIncludesImages}
+            className="hover:bg-gray-200 font-bold py-2 px-4 rounded mt-4 mb-4 underline underline-thickness: 2 underline-offset-8"
+          >
+            メディア
           </button>
         </div>
         {/* ツイートの表示 */}
